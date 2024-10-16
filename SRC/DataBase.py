@@ -34,3 +34,40 @@ class Database:
             return cursor.fetchall()
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to retrieve data: {e}")
+
+    def update_password(self, old_data, new_data):
+        try:
+            with self.conn:
+                cursor = self.conn.cursor()
+                cursor.execute(
+                    """
+                    UPDATE passwords 
+                    SET website = ?, email = ?, username = ?, password = ?
+                    WHERE website = ? AND email = ? AND username = ? AND password = ?
+                    """,
+                    (new_data['website'], new_data['email'], new_data['username'], new_data['password'],
+                    old_data[0], old_data[1], old_data[2], old_data[3])
+                )
+        except sqlite3.Error as e:
+            raise DatabaseError(f"Failed to update password: {e}")
+
+
+    def search_passwords(self, query):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("SELECT website, email, username, password FROM passwords WHERE website LIKE ? OR email LIKE ?", (f'%{query}%', f'%{query}%'))
+            return cursor.fetchall()
+        except sqlite3.Error as e:
+            raise DatabaseError(f"Failed to retrieve data: {e}")
+
+        
+    def delete_password(self, data):
+        try:
+            with self.conn:
+                self.conn.execute("DELETE FROM passwords WHERE website = ? AND email = ? AND username = ? AND password = ?", data)
+        except sqlite3.Error as e:
+            raise DatabaseError(f"Failed to delete data: {e}")
+
+
+    
+
