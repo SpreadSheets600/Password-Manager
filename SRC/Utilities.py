@@ -1,7 +1,7 @@
 import random
 import pyperclip
 
-def generate_password(entry):
+def generate_password():
     letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     numbers = '0123456789'
     symbols = '!@#$%^&*()'
@@ -13,6 +13,4 @@ def generate_password(entry):
     random.shuffle(password_list)
     password = ''.join(password_list)
     pyperclip.copy(password)
-
-    entry.delete(0, "end")
-    entry.insert(0, password)
+    return password
