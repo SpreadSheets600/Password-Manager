@@ -1,2 +1,2 @@
+pyperclip
 customtkinter
-sqlite3
