@@ -3,6 +3,7 @@ import customtkinter as ctk
 from DataBase import Database
 from tkinter import messagebox
 from Utilities import generate_password
+import re  # Import the regular expression module
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
@@ -82,25 +83,42 @@ class PasswordManagerApp(ctk.CTk):
             self.entry_widgets["username"].insert(0, pw_data[2])
             self.entry_widgets["password"].insert(0, pw_data[3])
 
+    def is_valid_email(self, email):
+        # Regular expression for validating an Email
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return re.match(email_regex, email)
 
-    def generate_password(self):
-        password = generate_password()
-        self.entry_widgets["password"].delete(0, ctk.END)
-        self.entry_widgets["password"].insert(0, password)
+    def is_valid_username(self, username):
+        # Check if username is not empty and meets length requirements
+        return len(username) > 0
 
     def save_password(self):
         data = {key: widget.get() for key, widget in self.entry_widgets.items()}
         
         if not all(data.values()):
             messagebox.showwarning("Warning", "All fields must be filled!")
-        else:
-            try:
-                db.save_data(**data)
-                for widget in self.entry_widgets.values():
-                    widget.delete(0, ctk.END)
-                messagebox.showinfo("Success", "Password saved successfully!")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to save password: {e}")
+            return
+
+        if not self.is_valid_email(data["email"]):
+            messagebox.showwarning("Warning", "Please enter a valid email address!")
+            return
+
+        if not self.is_valid_username(data["username"]):
+            messagebox.showwarning("Warning", "Username cannot be empty!")
+            return
+
+        try:
+            db.save_data(**data)
+            for widget in self.entry_widgets.values():
+                widget.delete(0, ctk.END)
+            messagebox.showinfo("Success", "Password saved successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save password: {e}")
+
+    def generate_password(self):
+        password = generate_password()
+        self.entry_widgets["password"].delete(0, ctk.END)
+        self.entry_widgets["password"].insert(0, password)
 
     def view_passwords(self):
         self.clear_content_frame()
@@ -197,14 +215,23 @@ class PasswordManagerApp(ctk.CTk):
         
         if not all(new_data.values()):
             messagebox.showwarning("Warning", "All fields must be filled!")
-        else:
-            try:
-                db.update_password(old_data, new_data)
-                self.clear_entries()
-                messagebox.showinfo("Success", "Password updated successfully!")
-                self.view_passwords() 
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to update password: {e}")
+            return
+
+        if not self.is_valid_email(new_data["email"]):
+            messagebox.showwarning("Warning", "Please enter a valid email address!")
+            return
+
+        if not self.is_valid_username(new_data["username"]):
+            messagebox.showwarning("Warning", "Username cannot be empty!")
+            return
+
+        try:
+            db.update_password(old_data, new_data)
+            self.clear_entries()
+            messagebox.showinfo("Success", "Password updated successfully!")
+            self.view_passwords() 
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to update password: {e}")
 
     def delete_password(self, pw_data):
         if messagebox.askyesno("Delete Password", "Are you sure you want to delete this password?"):
@@ -230,4 +257,3 @@ class PasswordManagerApp(ctk.CTk):
 if __name__ == "__main__":
     app = PasswordManagerApp()
     app.mainloop()
-
