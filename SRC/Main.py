@@ -1,4 +1,5 @@
 import pyperclip
+import re
 import customtkinter as ctk
 from DataBase import Database
 from tkinter import messagebox
@@ -8,6 +9,11 @@ ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
 db = Database()
+def is_valid_email(email):
+    pattern = r'^[\w\.-]+@[\w\.-]+\.\w{2,4}$'
+    return re.match(pattern, email) is not None
+def is_valid_username(username):
+    return username.isalnum() or '_' in username or '.' in username
 
 class PasswordManagerApp(ctk.CTk):
     def __init__(self):
@@ -90,9 +96,14 @@ class PasswordManagerApp(ctk.CTk):
 
     def save_password(self):
         data = {key: widget.get() for key, widget in self.entry_widgets.items()}
-        
+
+        # Validation checks for email and username
         if not all(data.values()):
             messagebox.showwarning("Warning", "All fields must be filled!")
+        elif not is_valid_email(data['email']):
+            messagebox.showwarning("Warning", "Invalid email format. Please enter a valid email address.")
+        elif not is_valid_username(data['username']):
+            messagebox.showwarning("Warning", "Username can only contain alphanumeric characters, dots, or underscores.")
         else:
             try:
                 db.save_data(**data)
@@ -194,9 +205,14 @@ class PasswordManagerApp(ctk.CTk):
 
     def update_password(self, old_data):
         new_data = {key: widget.get() for key, widget in self.entry_widgets.items()}
-        
+
+        # Validation checks for email and username
         if not all(new_data.values()):
             messagebox.showwarning("Warning", "All fields must be filled!")
+        elif not is_valid_email(new_data['email']):
+            messagebox.showwarning("Warning", "Invalid email format. Please enter a valid email address.")
+        elif not is_valid_username(new_data['username']):
+            messagebox.showwarning("Warning", "Username can only contain alphanumeric characters, dots, or underscores.")
         else:
             try:
                 db.update_password(old_data, new_data)
