@@ -42,16 +42,18 @@ python Main.py
 
 ```markdown
 └── 📁Password-Manager
-    └── 📁SRC
-    └── DataBase.py # Database management functionalities.
-    └── Exceptions.py # Custom exceptions for error handling.
-    └── Main.py # Main application file that runs the Password Manager.
-    └── Utilities.py # Utility functions, including password generation.
+└── 📁SRC
+└── DataBase.py # Database management functionalities.
+└── Exceptions.py # Custom exceptions for error handling.
+└── Main.py # Main application file that runs the Password Manager.
+└── Utilities.py # Utility functions, including password generation.
 ```
 
 ## Contributing
 
 If you would like to contribute to this project, feel free to fork the repository and submit a pull request.
+
+More details on how to contribute can be found in the [CONTRIBUTING.md](DOCS/CONTRIBUTING.md) file.
 
 ## Acknowledgments
 
