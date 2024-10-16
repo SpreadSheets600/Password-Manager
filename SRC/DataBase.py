@@ -26,3 +26,11 @@ class Database:
                                   (website, email, username, password))
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to save data: {e}")
+
+    def get_all_passwords(self):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("SELECT website, email, username, password FROM passwords")
+            return cursor.fetchall()
+        except sqlite3.Error as e:
+            raise DatabaseError(f"Failed to retrieve data: {e}")
