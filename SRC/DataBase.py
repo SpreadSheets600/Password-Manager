@@ -29,9 +29,11 @@ class Database:
 
     def get_all_passwords(self):
         try:
-            cursor = self.conn.cursor()
-            cursor.execute("SELECT website, email, username, password FROM passwords")
-            return cursor.fetchall()
+            with self.conn:
+                cursor = self.conn.cursor()
+                cursor.execute("SELECT website, email, username, password FROM passwords")
+                results = cursor.fetchall()
+                return results if results else []  # Return empty list if no results
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to retrieve data: {e}")
 
@@ -51,16 +53,16 @@ class Database:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to update password: {e}")
 
-
     def search_passwords(self, query):
         try:
             cursor = self.conn.cursor()
-            cursor.execute("SELECT website, email, username, password FROM passwords WHERE website LIKE ? OR email LIKE ?", (f'%{query}%', f'%{query}%'))
-            return cursor.fetchall()
+            cursor.execute("SELECT website, email, username, password FROM passwords WHERE website LIKE ? OR email LIKE ?", 
+                           (f'%{query}%', f'%{query}%'))
+            results = cursor.fetchall()
+            return results if results else []  # Return empty list if no results
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to retrieve data: {e}")
 
-        
     def delete_password(self, data):
         try:
             with self.conn:
@@ -68,6 +70,7 @@ class Database:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to delete data: {e}")
 
-
-    
-
+    def __del__(self):
+        """Ensure the database connection is closed properly when the object is destroyed."""
+        if self.conn:
+            self.conn.close()
