@@ -50,13 +50,13 @@ class PasswordManagerApp(ctk.CTk):
     def change_appearance_mode(self, mode):
         ctk.set_appearance_mode(mode)
 
-    def add_password_form(self):
+    def add_password_form(self, pw_data=None):
         self.clear_content_frame()
 
         form_frame = ctk.CTkFrame(self.content_frame)
         form_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
-        ctk.CTkLabel(form_frame, text="Add New Password", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(0, 20))
+        ctk.CTkLabel(form_frame, text="Add New Password" if pw_data is None else "Edit Password", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(0, 20))
 
         fields = [("Website", "website"), ("Email", "email"), ("Username", "username"), ("Password", "password")]
         self.entry_widgets = {}
@@ -70,8 +70,18 @@ class PasswordManagerApp(ctk.CTk):
         button_frame = ctk.CTkFrame(form_frame)
         button_frame.pack(fill="x", pady=(20, 0))
 
-        ctk.CTkButton(button_frame, text="Generate Password", command=self.generate_password).pack(side="left", padx=(0, 10))
-        ctk.CTkButton(button_frame, text="Save Password", command=self.save_password).pack(side="left")
+        if pw_data is None:
+            ctk.CTkButton(button_frame, text="Generate Password", command=self.generate_password).pack(side="left", padx=(0, 10))
+            ctk.CTkButton(button_frame, text="Save Password", command=self.save_password).pack(side="left")
+        else:
+            ctk.CTkButton(button_frame, text="Update Password", command=lambda: self.update_password(pw_data)).pack(side="left")
+        
+        if pw_data:
+            self.entry_widgets["website"].insert(0, pw_data[0])
+            self.entry_widgets["email"].insert(0, pw_data[1])
+            self.entry_widgets["username"].insert(0, pw_data[2])
+            self.entry_widgets["password"].insert(0, pw_data[3])
+
 
     def generate_password(self):
         password = generate_password()
@@ -118,18 +128,14 @@ class PasswordManagerApp(ctk.CTk):
                 ctk.CTkButton(password_frame, text="Show", width=60, 
                               command=lambda p=password, pl=password_label: self.toggle_password(p, pl)).grid(row=3, column=1, padx=5, pady=2)
                 
+                ctk.CTkButton(password_frame, text="Edit", width=60,
+                              command=lambda pw_data=(website, email, username, password): self.edit_password(pw_data)).grid(row=3, column=2, padx=5, pady=2)
+                
                 ctk.CTkButton(password_frame, text="Copy", width=60,
-                              command=lambda p=password: self.copy_to_clipboard(p)).grid(row=3, column=2, padx=5, pady=2)
-
-    def toggle_password(self, password, label):
-        if label.cget("text") == "Password: ********":
-            label.configure(text=f"Password: {password}")
-        else:
-            label.configure(text="Password: ********")
-
-    def copy_to_clipboard(self, text):
-        pyperclip.copy(text)
-        messagebox.showinfo("Copied", "Password copied to clipboard!")
+                                command=lambda p=password: self.copy_to_clipboard(p)).grid(row=3, column=3, padx=5, pady=2)
+                
+                ctk.CTkButton(password_frame, text="Delete", width=60,
+                                command=lambda pw_data=(website, email, username, password): self.delete_password(pw_data)).grid(row=3, column=4, padx=5, pady=2)
 
     def search_passwords(self):
         self.clear_content_frame()
@@ -177,6 +183,46 @@ class PasswordManagerApp(ctk.CTk):
                 ctk.CTkButton(result_frame, text="Copy", width=60,
                               command=lambda p=password: self.copy_to_clipboard(p)).pack(side="left", padx=5, pady=2)
 
+    def toggle_password(self, password, label):
+        if label.cget("text") == "Password: ********":
+            label.configure(text=f"Password: {password}")
+        else:
+            label.configure(text="Password: ********")
+
+    def edit_password(self, pw_data):
+        self.add_password_form(pw_data)
+
+    def update_password(self, old_data):
+        new_data = {key: widget.get() for key, widget in self.entry_widgets.items()}
+        
+        if not all(new_data.values()):
+            messagebox.showwarning("Warning", "All fields must be filled!")
+        else:
+            try:
+                db.update_password(old_data, new_data)
+                self.clear_entries()
+                messagebox.showinfo("Success", "Password updated successfully!")
+                self.view_passwords() 
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to update password: {e}")
+
+    def delete_password(self, pw_data):
+        if messagebox.askyesno("Delete Password", "Are you sure you want to delete this password?"):
+            try:
+                db.delete_password(pw_data)
+                messagebox.showinfo("Success", "Password deleted successfully!")
+                self.view_passwords()
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to delete password: {e}")
+
+    def copy_to_clipboard(self, password):
+        pyperclip.copy(password)
+        messagebox.showinfo("Copied", "Password copied to clipboard!")
+
+    def clear_entries(self):
+        for entry in self.entry_widgets.values():
+            entry.delete(0, ctk.END)
+
     def clear_content_frame(self):
         for widget in self.content_frame.winfo_children():
             widget.destroy()
@@ -184,3 +230,4 @@ class PasswordManagerApp(ctk.CTk):
 if __name__ == "__main__":
     app = PasswordManagerApp()
     app.mainloop()
+
