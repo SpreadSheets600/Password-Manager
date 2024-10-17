@@ -17,3 +17,4 @@ def generate_password(min_length=10):
     password = ''.join(password_list)
     pyperclip.copy(password)
     return password
+
