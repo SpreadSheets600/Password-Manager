@@ -149,15 +149,22 @@ class PasswordManagerApp(ctk.CTk):
 
 
     def generate_password(self):
-        data = {key: widget.get() for key, widget in self.entry_widgets.items()}
-        if not data['username']:    #wil not generate password until the username is given
-            messagebox.showwarning("Warning", "Please fill username for customized password!")
-            return
-        last_word = data['username'].split()[-1] 
-        password = generate_password()
-        password=last_word+password #will add last word of username with the password. More personalized password
-        self.entry_widgets["password"].delete(0, ctk.END)
-        self.entry_widgets["password"].insert(0, password)
+    data = {key: widget.get() for key, widget in self.entry_widgets.items()}
+    if not data['username']:
+        messagebox.showwarning("Warning", "Please fill username for customized password!")
+        return
+    
+    last_word = data['username'].split()[-1] 
+    password = generate_password(min_length=10) 
+    password = last_word + password
+
+    if len(password) < 10:
+        messagebox.showwarning("Warning", "Generated password is too weak. Please try again.")
+        return
+    
+    self.entry_widgets["password"].delete(0, ctk.END)
+    self.entry_widgets["password"].insert(0, password)
+
 
     def save_password(self):
         data = {key: widget.get() for key, widget in self.entry_widgets.items()}
