@@ -1,12 +1,18 @@
 import pyperclip
 import re
+import sys
 import customtkinter as ctk
 from DataBase import Database
 from tkinter import messagebox
 from Utilities import generate_password
 
+MASTER_PASSWORD = "password"
+
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
+
+ctk.set_widget_scaling(1.0)  # Set the widget scaling to a neutral value.
+ctk.set_window_scaling(1.0)  # Set window scaling.
 
 db = Database()
 def is_valid_email(email):
@@ -15,6 +21,51 @@ def is_valid_email(email):
 def is_valid_username(username):
     return username.isalnum() or '_' in username or '.' in username
 
+class MasterPasswordWindow(ctk.CTk):
+    """This window prompts for the master password and controls access to the main PasswordManagerApp."""
+
+    def __init__(self):
+        super().__init__()
+        self.title("Master Password")
+        self.geometry("400x200")
+
+        self.after_id = None  # To keep track of any pending 'after' calls
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        self.frame = ctk.CTkFrame(self)
+        self.frame.pack(expand=True, fill="both", padx=20, pady=20)
+
+        self.label = ctk.CTkLabel(self.frame, text="Enter Master Password", font=ctk.CTkFont(size=16, weight="bold"))
+        self.label.pack(pady=(20, 10))
+
+        self.password_entry = ctk.CTkEntry(self.frame, show="*", placeholder_text="Master Password", width=300)
+        self.password_entry.pack(pady=10)
+
+        self.submit_button = ctk.CTkButton(self.frame, text="Submit", command=self.check_password)
+        self.submit_button.pack(padx=20, pady=10)
+
+        self.bind("<Return>", lambda event: self.check_password())  # Bind Enter key to submit
+    
+    def check_password(self):
+        """Check if the entered password matches the master password."""
+        entered_password = self.password_entry.get()
+        print(f"Entered password: {entered_password}")  # Debugging statement
+        if entered_password == MASTER_PASSWORD:
+            print("Password correct! Opening main app...")  # Debugging statement
+            self.open_password_manager()  # Open main app first
+        else:
+            print("Incorrect password!")  # Debugging statement
+            messagebox.showerror("Error", "Incorrect master password. Please try again.")
+
+    def open_password_manager(self):
+        """Open the main Password Manager app and close the master password window."""
+        self.withdraw()  # Hide the master password window
+        app = PasswordManagerApp()  # Create the password manager app
+        app.mainloop()  # Start the main loop of the PasswordManagerApp
+        self.destroy()  # Safely destroy the master password window after the main app closes
+        
 class PasswordManagerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -52,7 +103,15 @@ class PasswordManagerApp(ctk.CTk):
         self.content_frame.grid_rowconfigure(0, weight=1)
 
         self.add_password_form()
+        
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
+    def on_close(self):
+        """Handle the window close event."""
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.quit()  # Exit the mainloop
+            sys.exit()
+        
     def change_appearance_mode(self, mode):
         ctk.set_appearance_mode(mode)
 
@@ -244,6 +303,6 @@ class PasswordManagerApp(ctk.CTk):
             widget.destroy()
 
 if __name__ == "__main__":
-    app = PasswordManagerApp()
-    app.mainloop()
+    master_password_window = MasterPasswordWindow()
+    master_password_window.mainloop()
 
