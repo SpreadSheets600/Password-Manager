@@ -15,9 +15,11 @@ ctk.set_widget_scaling(1.0)  # Set the widget scaling to a neutral value.
 ctk.set_window_scaling(1.0)  # Set window scaling.
 
 db = Database()
+
 def is_valid_email(email):
     pattern = r'^[\w\.-]+@[\w\.-]+\.\w{2,4}$'
     return re.match(pattern, email) is not None
+
 def is_valid_username(username):
     return username.isalnum() or '_' in username or '.' in username
 
@@ -149,173 +151,18 @@ class PasswordManagerApp(ctk.CTk):
 
 
     def generate_password(self):
-    data = {key: widget.get() for key, widget in self.entry_widgets.items()}
-    if not data['username']:
-        messagebox.showwarning("Warning", "Please fill username for customized password!")
-        return
-    
-    last_word = data['username'].split()[-1] 
-    password = generate_password(min_length=10) 
-    password = last_word + password
+        data = {key: widget.get() for key, widget in self.entry_widgets.items()}
+        if not data['username']:
+            messagebox.showwarning("Warning", "Please fill username for customized password!")
+            return
+        
+        last_word = data['username'].split()[-1] 
+        password = generate_password(min_length=10)  # Password generation
 
-    if len(password) < 10:
-        messagebox.showwarning("Warning", "Generated password is too weak. Please try again.")
-        return
-    
-    self.entry_widgets["password"].delete(0, ctk.END)
-    self.entry_widgets["password"].insert(0, password)
+        # Removed strength check
+        self.entry_widgets["password"].delete(0, ctk.END)
+        self.entry_widgets["password"].insert(0, last_word + password)
 
 
     def save_password(self):
-        data = {key: widget.get() for key, widget in self.entry_widgets.items()}
-
-        # Validation checks for email and username
-        if not all(data.values()):
-            messagebox.showwarning("Warning", "All fields must be filled!")
-        elif not is_valid_email(data['email']):
-            messagebox.showwarning("Warning", "Invalid email format. Please enter a valid email address.")
-        elif not is_valid_username(data['username']):
-            messagebox.showwarning("Warning", "Username can only contain alphanumeric characters, dots, or underscores.")
-        else:
-            try:
-                db.save_data(**data)
-                for widget in self.entry_widgets.values():
-                    widget.delete(0, ctk.END)
-                messagebox.showinfo("Success", "Password saved successfully!")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to save password: {e}")
-
-    def view_passwords(self):
-        self.clear_content_frame()
-
-        ctk.CTkLabel(self.content_frame, text="Saved Passwords", font=ctk.CTkFont(size=25, weight="bold")).pack(pady=(0, 20))
-
-        scrollable_frame = ctk.CTkScrollableFrame(self.content_frame)
-        scrollable_frame.pack(expand=True, fill="both", padx=20, pady=20)
-
-        passwords = db.get_all_passwords()
-        if not passwords:
-            ctk.CTkLabel(scrollable_frame, text="No saved passwords.").pack(pady=20)
-        else:
-            for i, (website, email, username, password) in enumerate(passwords):
-                password_frame = ctk.CTkFrame(scrollable_frame)
-                password_frame.pack(fill="x", padx=5, pady=5)
-
-                ctk.CTkLabel(password_frame, text=f"{i+1}. {website}", font=ctk.CTkFont(weight="bold")).grid(row=0, column=0, sticky="w", padx=5, pady=2)
-                ctk.CTkLabel(password_frame, text=f"Email: {email}").grid(row=1, column=0, sticky="w", padx=5, pady=2)
-                ctk.CTkLabel(password_frame, text=f"Username: {username}").grid(row=2, column=0, sticky="w", padx=5, pady=2)
-                
-                password_label = ctk.CTkLabel(password_frame, text="Password: ********")
-                password_label.grid(row=3, column=0, sticky="w", padx=5, pady=2)
-
-                ctk.CTkButton(password_frame, text="Show", width=60, 
-                              command=lambda p=password, pl=password_label: self.toggle_password(p, pl)).grid(row=3, column=1, padx=5, pady=2)
-                
-                ctk.CTkButton(password_frame, text="Edit", width=60,
-                              command=lambda pw_data=(website, email, username, password): self.edit_password(pw_data)).grid(row=3, column=2, padx=5, pady=2)
-                
-                ctk.CTkButton(password_frame, text="Copy", width=60,
-                                command=lambda p=password: self.copy_to_clipboard(p)).grid(row=3, column=3, padx=5, pady=2)
-                
-                ctk.CTkButton(password_frame, text="Delete", width=60,
-                                command=lambda pw_data=(website, email, username, password): self.delete_password(pw_data)).grid(row=3, column=4, padx=5, pady=2)
-
-    def search_passwords(self):
-        self.clear_content_frame()
-
-        ctk.CTkLabel(self.content_frame, text="Search Passwords", font=ctk.CTkFont(size=25, weight="bold")).pack(pady=(0, 20))
-
-        search_frame = ctk.CTkFrame(self.content_frame)
-        search_frame.pack(fill="x", padx=20, pady=20)
-
-        self.search_entry = ctk.CTkEntry(search_frame, width=300, placeholder_text="Enter website or email")
-        self.search_entry.pack(side="left", padx=(0, 10))
-
-        ctk.CTkButton(search_frame, text="Search", command=self.perform_search).pack(side="left")
-
-        self.search_results_frame = ctk.CTkFrame(self.content_frame)
-        self.search_results_frame.pack(expand=True, fill="both", padx=20, pady=(0, 20))
-
-    def perform_search(self):
-        query = self.search_entry.get()
-        if not query:
-            messagebox.showwarning("Warning", "Please enter a search query!")
-            return
-
-        for widget in self.search_results_frame.winfo_children():
-            widget.destroy()
-
-        results = db.search_passwords(query)
-        if not results:
-            ctk.CTkLabel(self.search_results_frame, text="No matching passwords found.").pack(pady=20)
-        else:
-            for website, email, username, password in results:
-                result_frame = ctk.CTkFrame(self.search_results_frame)
-                result_frame.pack(fill="x", padx=5, pady=5)
-
-                ctk.CTkLabel(result_frame, text=f"Website: {website}", font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=5, pady=2)
-                ctk.CTkLabel(result_frame, text=f"Email: {email}").pack(anchor="w", padx=5, pady=2)
-                ctk.CTkLabel(result_frame, text=f"Username: {username}").pack(anchor="w", padx=5, pady=2)
-                
-                password_label = ctk.CTkLabel(result_frame, text="Password: ********")
-                password_label.pack(side="left", padx=5, pady=2)
-
-                ctk.CTkButton(result_frame, text="Show", width=60, 
-                              command=lambda p=password, pl=password_label: self.toggle_password(p, pl)).pack(side="left", padx=5, pady=2)
-                
-                ctk.CTkButton(result_frame, text="Copy", width=60,
-                              command=lambda p=password: self.copy_to_clipboard(p)).pack(side="left", padx=5, pady=2)
-
-    def toggle_password(self, password, label):
-        if label.cget("text") == "Password: ********":
-            label.configure(text=f"Password: {password}")
-        else:
-            label.configure(text="Password: ********")
-
-    def edit_password(self, pw_data):
-        self.add_password_form(pw_data)
-
-    def update_password(self, old_data):
-        new_data = {key: widget.get() for key, widget in self.entry_widgets.items()}
-
-        # Validation checks for email and username
-        if not all(new_data.values()):
-            messagebox.showwarning("Warning", "All fields must be filled!")
-        elif not is_valid_email(new_data['email']):
-            messagebox.showwarning("Warning", "Invalid email format. Please enter a valid email address.")
-        elif not is_valid_username(new_data['username']):
-            messagebox.showwarning("Warning", "Username can only contain alphanumeric characters, dots, or underscores.")
-        else:
-            try:
-                db.update_password(old_data, new_data)
-                self.clear_entries()
-                messagebox.showinfo("Success", "Password updated successfully!")
-                self.view_passwords() 
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to update password: {e}")
-
-    def delete_password(self, pw_data):
-        if messagebox.askyesno("Delete Password", "Are you sure you want to delete this password?"):
-            try:
-                db.delete_password(pw_data)
-                messagebox.showinfo("Success", "Password deleted successfully!")
-                self.view_passwords()
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to delete password: {e}")
-
-    def copy_to_clipboard(self, password):
-        pyperclip.copy(password)
-        messagebox.showinfo("Copied", "Password copied to clipboard!")
-
-    def clear_entries(self):
-        for entry in self.entry_widgets.values():
-            entry.delete(0, ctk.END)
-
-    def clear_content_frame(self):
-        for widget in self.content_frame.winfo_children():
-            widget.destroy()
-
-if __name__ == "__main__":
-    master_password_window = MasterPasswordWindow()
-    master_password_window.mainloop()
-
+        data = {key: widget.get() for key, widget in
