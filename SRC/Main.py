@@ -121,7 +121,7 @@ class PasswordManagerApp(ctk.CTk):
         form_frame = ctk.CTkFrame(self.content_frame)
         form_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
-        ctk.CTkLabel(form_frame, text="Add New Password" if pw_data is None else "Edit Password", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(0, 20))
+        ctk.CTkLabel(form_frame, text="Add New Password" if pw_data is None else "Edit Password", font=ctk.CTkFont(size=25, weight="bold")).pack(pady=(0, 20))
 
         fields = [("Website", "website"), ("Email", "email"), ("Username", "username"), ("Password", "password")]
         self.entry_widgets = {}
@@ -149,7 +149,13 @@ class PasswordManagerApp(ctk.CTk):
 
 
     def generate_password(self):
+        data = {key: widget.get() for key, widget in self.entry_widgets.items()}
+        if not data['username']:
+            messagebox.showwarning("Warning", "Please fill username for customize password!")
+            return
+        first_word = data['username'].split()[-1] 
         password = generate_password()
+        password=first_word+password
         self.entry_widgets["password"].delete(0, ctk.END)
         self.entry_widgets["password"].insert(0, password)
 
@@ -175,7 +181,7 @@ class PasswordManagerApp(ctk.CTk):
     def view_passwords(self):
         self.clear_content_frame()
 
-        ctk.CTkLabel(self.content_frame, text="Saved Passwords", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(0, 20))
+        ctk.CTkLabel(self.content_frame, text="Saved Passwords", font=ctk.CTkFont(size=25, weight="bold")).pack(pady=(0, 20))
 
         scrollable_frame = ctk.CTkScrollableFrame(self.content_frame)
         scrollable_frame.pack(expand=True, fill="both", padx=20, pady=20)
@@ -210,7 +216,7 @@ class PasswordManagerApp(ctk.CTk):
     def search_passwords(self):
         self.clear_content_frame()
 
-        ctk.CTkLabel(self.content_frame, text="Search Passwords", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(0, 20))
+        ctk.CTkLabel(self.content_frame, text="Search Passwords", font=ctk.CTkFont(size=25, weight="bold")).pack(pady=(0, 20))
 
         search_frame = ctk.CTkFrame(self.content_frame)
         search_frame.pack(fill="x", padx=20, pady=20)
