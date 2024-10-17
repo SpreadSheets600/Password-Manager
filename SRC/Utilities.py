@@ -1,7 +1,7 @@
 import random
 import pyperclip
 
-def generate_password():
+def genpass():
     letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     numbers = '0123456789'
     symbols = '!@#$%^&*()'
@@ -14,3 +14,13 @@ def generate_password():
     password = ''.join(password_list)
     pyperclip.copy(password)
     return password
+
+def pstrng(password):
+    if len(password) < 6:
+        return "WEAK"
+    up = any(char.isupper() for char in password)
+    digit = any(char.isdigit() for char in password)
+    
+    if up and digit:
+        return "STRONG"
+    return "MEDIUM"
