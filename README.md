@@ -1,10 +1,11 @@
-# Password Manager
 
-## Overview
+# Password Manager 🗝️
+
+## Overview 📚
 
 The Password Manager is a user-friendly application that helps you securely store and manage your passwords. It features a simple and intuitive interface built with CustomTkinter and utilizes SQLite for data storage. With this app, you can add, view, edit, search, and delete your saved passwords with ease.
 
-## Features
+## Features ✨
 
 - **Add New Passwords**: Easily save passwords associated with websites, emails, and usernames.
 - **View Saved Passwords**: Access a list of all stored passwords in a secure manner.
@@ -14,15 +15,15 @@ The Password Manager is a user-friendly application that helps you securely stor
 - **Generate Strong Passwords**: Automatically create secure passwords with the click of a button.
 - **Dark and Light Mode**: Switch between different appearance modes for better user experience.
 
-## Installation
+## Installation ⚙️
 
 ### Prerequisites
 
-Make sure you have Python 3.x installed on your system.
+◉ Make sure you have Python 3.x installed on your system.
 
 ### Requirements
 
-To install the necessary dependencies, use the `requirements.txt` file included in the project. You can install them using pip:
+◉ To install the necessary dependencies, use the `requirements.txt` file included in the project. You can install them using pip:
 
 ```bash
 pip install -r requirements.txt
@@ -56,6 +57,7 @@ python Main.py
         └── Utilities.py
     └── README.md
 ```
+
 <details>
 <summary><h2> TODO List </h2></summary>
 
@@ -118,13 +120,77 @@ python Main.py
 </details>
 
 
+## Usage Guide 📝
 
-## Contributing
+### Adding a Password
+1. Open the application and navigate to the "Add Password" section.
+2. Fill in the required fields:
+   - **Website**: Enter the name of the website or service.
+   - **Email/Username**: Enter the associated email or username.
+   - **Password**: You can either type in your password or click the "Generate" button to create a strong password automatically.
+3. Click on the "Save" button to store the password.
 
-If you would like to contribute to this project, feel free to fork the repository and submit a pull request.
+### Viewing Saved Passwords
+1. Navigate to the "View Passwords" section.
+2. You will see a list of all saved passwords.
+3. You can use the search bar to quickly find a specific entry.
 
-More details on how to contribute can be found in the [CONTRIBUTING.md](DOCS/CONTRIBUTING.md) file.
+### Editing a Password
+1. Go to the "View Passwords" section.
+2. Find the password entry you wish to edit and click the "Edit" button next to it.
+3. Make the necessary changes and click "Save".
 
-## Acknowledgments
+### Deleting a Password
+1. In the "View Passwords" section, find the password you want to delete.
+2. Click the "Delete" button next to the entry.
+3. Confirm the deletion when prompted.
 
-- Special thanks to the developers of CustomTkinter and SQLite for providing the tools used in this application.
+### Searching for Passwords
+1. Navigate to the "View Passwords" section.
+2. Use the search bar at the top to enter a website or email.
+3. The list will automatically filter to show matching entries.
+
+### Generating Strong Passwords
+1. While adding or editing a password, click the "Generate" button next to the password field.
+2. The app will create a strong password for you. You can then modify it if needed before saving.
+
+## Contributing 🤝
+
+◉ We welcome contributions from everyone! Here’s how you can help:
+
+### Steps to Contribute
+1. **Fork the Repository**: Click on the "Fork" button at the top right corner of the repository page to create your copy.
+
+2. **Clone Your Fork**:
+   ```bash
+   git clone https://github.com/your-username/Password-Manager.git
+   ```
+
+3. **Create a New Branch**:
+   ```bash
+   git checkout -b feature-branch-name
+   ```
+
+4. **Make Your Changes**: Add features, fix bugs, or improve documentation.
+
+5. **Commit Your Changes**:
+   ```bash
+   git commit -m "Description of your changes"
+   ```
+
+6. **Push to Your Fork**:
+   ```bash
+   git push origin feature-branch-name
+   ```
+
+7. **Submit a Pull Request**: Go to the original repository and click on "New Pull Request". Provide a clear description of your changes and why you think they should be merged.
+
+### Guidelines for Contributions
+- **Code Quality**: Ensure your code is clean, well-documented, and follows existing project conventions.
+- **Issues**: If you find a bug or want to suggest a feature, please open an issue to discuss it before starting work.
+- **Testing**: If your changes involve code, please write tests to ensure it works as intended.
+
+◉ More details on how to contribute can be found in the [CONTRIBUTING.md](DOCS/CONTRIBUTING.md) file.
+
+## Acknowledgments 🙏
+Special thanks to the developers of CustomTkinter and SQLite for providing the tools used in this application.

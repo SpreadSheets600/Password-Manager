@@ -226,7 +226,7 @@ class PasswordManagerApp(ctk.CTk):
                 "Warning", "Please Fill In Username Before Generating Password"
             )
             return
-        password = generate_password()
+        password = generate_password(min_length=6)
         self.entrywid["password"].delete(0, ctk.END)
         self.entrywid["password"].insert(0, password)
 
@@ -553,3 +553,4 @@ class PasswordManagerApp(ctk.CTk):
 if __name__ == "__main__":
     master_password_window = MasterPasswordWindow()
     master_password_window.mainloop()
+
