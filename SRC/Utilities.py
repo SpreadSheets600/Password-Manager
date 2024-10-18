@@ -27,4 +27,3 @@ def password_strength(password):
     if up and digit:
         return "STRONG"
     return "MEDIUM"
-

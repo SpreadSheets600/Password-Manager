@@ -1,2 +1,4 @@
 pyperclip
 customtkinter
+pytest
+pytest-mock
