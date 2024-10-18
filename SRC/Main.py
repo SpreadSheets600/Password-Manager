@@ -116,6 +116,13 @@ class PasswordManagerApp(ctk.CTk):
         )
         self.sidebar_button_3.grid(row=3, column=0, padx=20, pady=10)
 
+        self.sidebar_button_4 = ctk.CTkButton(
+            self.sidebar_frame,
+            text="Import Passwords",
+            command=self.import_passwords,
+        )
+        self.sidebar_button_4.grid(row=4, column=0, padx=20, pady=10)
+
         self.appearance_mode_label = ctk.CTkLabel(
             self.sidebar_frame, text="Appearance Mode:", anchor="w"
         )
@@ -443,6 +450,49 @@ class PasswordManagerApp(ctk.CTk):
         file_path = ctk.filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
         if file_path:
             self.import_csv(file_path)
+
+    def import_csv(self, file_path):
+        passwords = db.get_all_passwords()
+        websites_hashmap = {}
+        if passwords:
+            for website, email, username, password in passwords:
+                websites_hashmap[website] = (email, username, password)
+
+        try:
+            with open(file_path, newline="", encoding="utf-8") as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    name = row.get("\ufeffname", "").strip()
+                    if not name:
+                        row.get("name", "").strip()
+
+                    url = row.get("url", "").strip()
+                    username = row.get("username", "").strip()
+                    password = row.get("password", "").strip()
+
+                    email = username
+                    if not username.endswith(".com"):
+                        email = "No Email Provided"
+
+                    if url and username and password:
+
+                        if url in websites_hashmap:
+                            should_save = messagebox.askyesno(
+                                "Duplicate Entry",
+                                f"A Passeord For {url} Already Exists. Do You Want To Save This Password?",
+                            )
+
+                            if not should_save:
+                                continue
+
+                        db.save_data(url, email, username, password)
+                    else:
+                        print(f"Failed To Save Password For {name}")
+
+            messagebox.showinfo("Success", "Passwords Imported Sucessfully!")
+            self.view_passwords()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed To Import Passwords: {e}")
 
     def toggle_password(self, password, label):
         if label.cget("text") == "Password: ********":
