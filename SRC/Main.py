@@ -18,11 +18,15 @@ db = Database()
 
 
 def is_valid_email(email):
+    if not email:
+        return True
     pattern = r"^[\w\.-]+@[\w\.-]+\.\w{2,4}$"
     return re.match(pattern, email) is not None
 
 
 def is_valid_username(username):
+    if not username:
+        return True
     return username.isalnum() or "_" in username or "." in username
 
 
@@ -241,16 +245,18 @@ class PasswordManagerApp(ctk.CTk):
     def save_password(self):
         data = {key: widget.get() for key, widget in self.entrywid.items()}
 
-        if not all(data.values()):
-            messagebox.showwarning("Warning", "All Fields Must Be Filled!")
+        if not (data["email"] or data["username"]):
+            messagebox.showwarning("Missing Information", "Please provide either a username or an email address.")
+
+        elif not data["website"]:
+            messagebox.showwarning("Missing Information", "The website field cannot be left empty. Please enter a website.")
+
+        elif not data["password"]:
+            messagebox.showwarning("Missing Information", "Please enter a password to continue.")
+
         elif not is_valid_email(data["email"]):
             messagebox.showwarning(
-                "Warning", "Invalid Email Format. Please Enter A Valid Email Address."
-            )
-        elif not is_valid_username(data["username"]):
-            messagebox.showwarning(
-                "Warning",
-                "Username Can Only Contain Alphanumeric Characters, Dots, Or Underscores.",
+                "Invalid Email", "The email address you entered appears to be invalid. Please check and try again."
             )
         else:
             strng = password_strength(data["password"])
@@ -506,12 +512,20 @@ class PasswordManagerApp(ctk.CTk):
     def update_password(self, old_data):
         new_data = {key: widget.get() for key, widget in self.entrywid.items()}
 
-        if not all(new_data.values()):
-            messagebox.showwarning("Warning", "All Fields Must Be Filled!")
+        if not (new_data["email"] or new_data["username"]):
+            messagebox.showwarning("Missing Information", "Please provide either a username or an email address.")
+
+        elif not new_data["website"]:
+            messagebox.showwarning("Missing Information", "The website field cannot be left empty. Please enter a website.")
+
+        elif not new_data["password"]:
+            messagebox.showwarning("Missing Information", "Please enter a password to continue.")
+
         elif not is_valid_email(new_data["email"]):
             messagebox.showwarning(
-                "Warning", "Invalid Email Format. Please Enter A Valid Email Address."
+                "Invalid Email", "The email address you entered appears to be invalid. Please check and try again."
             )
+
         elif not is_valid_username(new_data["username"]):
             messagebox.showwarning(
                 "Warning",
