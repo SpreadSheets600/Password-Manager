@@ -47,10 +47,6 @@ python Main.py
         └── CODE_OF_CONDUCT.md
         └── CONTRIBUTING.md
     └── 📁SRC
-        └── 📁__pycache__
-            └── DataBase.cpython-312.pyc
-            └── Exceptions.cpython-312.pyc
-            └── Utilities.cpython-312.pyc
         └── DataBase.py
         └── Exceptions.py
         └── Main.py
