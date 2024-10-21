@@ -1,4 +1,21 @@
 {
   "projectName": "Password-Manager",
-  "projectOwner": "SpreadSheets600"
+  "projectOwner": "SpreadSheets600",
+  "files": [
+    "README.md"
+  ],
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributorsPerLine": 7,
+  "contributors": [
+    {
+      "login": "thelegendev",
+      "name": "Diptodeep",
+      "avatar_url": "https://avatars.githubusercontent.com/u/87961483?v=4",
+      "profile": "https://discord.gg/URZnqtEbsQ",
+      "contributions": [
+        "mentoring"
+      ]
+    }
+  ]
 }
