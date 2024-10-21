@@ -159,6 +159,7 @@ class PasswordManagerApp(ctk.CTk):
         ctk.set_appearance_mode(mode)
 
     def add_password_form(self, pw_data=None):
+        self.current_page = 0
         self.clear_content_frame()
 
         form_frame = ctk.CTkFrame(self.content_frame)
@@ -384,7 +385,7 @@ class PasswordManagerApp(ctk.CTk):
             return
 
         self.search_results = db.search_passwords(query)
-        self.current_page = 1
+        self.current_page = 0
 
         if not self.search_results:
             ctk.CTkLabel(
@@ -449,7 +450,7 @@ class PasswordManagerApp(ctk.CTk):
                 password_label.grid(row=3, column=0, sticky="w", padx=5, pady=2)
 
                 show_button = ctk.CTkButton(password_frame, text="Show", width=60)
-                show_button.grid(row=3, column=1, padx=5, pady=2)
+                show_button.grid(row=3, column=5, padx=5, pady=2)
                 show_button.configure(
                     command=partial(
                         self.toggle_password, password, password_label, show_button
@@ -466,14 +467,14 @@ class PasswordManagerApp(ctk.CTk):
                         username,
                         password,
                     ): self.edit_password(pw_data),
-                ).grid(row=3, column=2, padx=5, pady=2)
+                ).grid(row=0, column=5, padx=5, pady=2)
 
                 ctk.CTkButton(
                     password_frame,
                     text="Copy",
                     width=60,
                     command=lambda p=password: self.copy_to_clipboard(p),
-                ).grid(row=3, column=3, padx=5, pady=2)
+                ).grid(row=1, column=5, padx=5, pady=2)
 
                 ctk.CTkButton(
                     password_frame,
@@ -485,26 +486,49 @@ class PasswordManagerApp(ctk.CTk):
                         username,
                         password,
                     ): self.delete_password(pw_data),
-                ).grid(row=3, column=4, padx=5, pady=2)
+                ).grid(
+                    row=2,
+                    column=5,
+                    padx=5,
+                    pady=2,
+                )
 
         return total_items
 
     def setup_pagination(
         self, total_items, frame, current_page, total_pages, next_command, prev_command
     ):
-
         for widget in frame.winfo_children():
             widget.destroy()
 
-        if current_page > 0:
-            prev_button = ctk.CTkButton(frame, text="Previous", command=prev_command)
-            prev_button.pack(side="left", padx=(0, 10))
+        pagination_frame = ctk.CTkFrame(frame)
+        pagination_frame.pack(pady=10)
 
-        if current_page < total_pages:
-            next_button = ctk.CTkButton(frame, text="Next", command=next_command)
-            next_button.pack(side="right", padx=(10, 0))
+        prev_button = ctk.CTkButton(
+            pagination_frame,
+            text="Previous",
+            command=prev_command,
+            state="disabled" if current_page == 0 else "normal",
+        )
+        prev_button.pack(side="left", padx=(0, 10))
+
+        page_label = ctk.CTkLabel(
+            pagination_frame,
+            text=f"Page {current_page + 1} Of {total_pages}",
+            font=ctk.CTkFont(size=15, weight="bold"),
+        )
+        page_label.pack(side="left", padx=(0, 10))
+
+        next_button = ctk.CTkButton(
+            pagination_frame,
+            text="Next",
+            command=next_command,
+            state="disabled" if current_page >= total_pages - 1 else "normal",
+        )
+        next_button.pack(side="left", padx=(10, 0))
 
     def import_passwords(self):
+        self.current_page = 0
         self.clear_content_frame()
 
         ctk.CTkLabel(
