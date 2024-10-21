@@ -84,7 +84,7 @@ class MasterPasswordWindow(ctk.CTk):
 
 class PasswordManagerApp(ctk.CTk):
 
-    ITEMS_PER_PAGE = 10
+    ITEMS_PER_PAGE = RESULTS_PER_PAGE = 10
 
     def __init__(self):
         super().__init__()
@@ -322,28 +322,118 @@ class PasswordManagerApp(ctk.CTk):
         scrollable_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
         passwords = db.get_all_passwords()
-
-        total_passwords = len(passwords)
-        self.total_pages = (total_passwords // self.ITEMS_PER_PAGE) + (
-            1 if total_passwords % self.ITEMS_PER_PAGE != 0 else 0
+        total_items = self.display_passwords(
+            passwords, self.current_page, scrollable_frame, paginated=True
         )
 
-        start_idx = self.current_page * self.ITEMS_PER_PAGE
-        end_idx = start_idx + self.ITEMS_PER_PAGE
-        passwords_to_display = passwords[start_idx:end_idx]
+        self.total_pages = (total_items - 1) // self.ITEMS_PER_PAGE + 1
+
+        pagination_frame = ctk.CTkFrame(self.content_frame)
+        pagination_frame.pack(fill="x", padx=20, pady=20)
+
+        self.setup_pagination(
+            total_items,
+            pagination_frame,
+            self.current_page,
+            self.total_pages,
+            self.next_page,
+            self.prev_page,
+        )
+
+    def next_page(self):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.view_passwords()
+
+    def prev_page(self):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.view_passwords()
+
+    def search_passwords(self):
+        self.clear_content_frame()
+
+        ctk.CTkLabel(
+            self.content_frame,
+            text="Search Passwords",
+            font=ctk.CTkFont(size=25, weight="bold"),
+        ).pack(pady=(0, 20))
+
+        search_frame = ctk.CTkFrame(self.content_frame)
+        search_frame.pack(fill="x", padx=20, pady=20)
+
+        self.search_entry = ctk.CTkEntry(
+            search_frame, width=300, placeholder_text="Enter Website Name Or Email"
+        )
+        self.search_entry.pack(side="left", padx=(0, 10))
+
+        ctk.CTkButton(search_frame, text="Search", command=self.perform_search).pack(
+            side="left"
+        )
+
+        self.search_results_frame = ctk.CTkScrollableFrame(self.content_frame)
+        self.search_results_frame.pack(expand=True, fill="both", padx=20, pady=(0, 20))
+
+        self.pagination_frame = ctk.CTkFrame(self.content_frame)
+        self.pagination_frame.pack(fill="x", padx=20, pady=(0, 20))
+
+    def perform_search(self):
+        query = self.search_entry.get()
+        if not query:
+            msgbox.showwarning("Warning", "Please Enter A Search Query!")
+            return
+
+        self.search_results = db.search_passwords(query)
+        self.current_page = 1
+
+        if not self.search_results:
+            ctk.CTkLabel(
+                self.search_results_frame, text="No Matching Passwords Found."
+            ).pack(pady=20)
+        else:
+            total_items = self.display_passwords(
+                self.search_results,
+                self.current_page,
+                self.search_results_frame,
+                paginated=True,
+            )
+            self.total_pages = (total_items - 1) // self.RESULTS_PER_PAGE + 1
+
+            self.setup_pagination(
+                total_items,
+                self.pagination_frame,
+                self.current_page,
+                self.total_pages,
+                self.next_page,
+                self.prev_page,
+            )
+
+    def display_passwords(self, passwords, page, frame, paginated=True):
+
+        for widget in frame.winfo_children():
+            widget.destroy()
+
+        total_items = len(passwords)
+        if paginated:
+            total_pages = (total_items - 1) // self.ITEMS_PER_PAGE + 1
+            start_idx = (page) * self.ITEMS_PER_PAGE
+            end_idx = start_idx + self.ITEMS_PER_PAGE
+            passwords_to_display = passwords[start_idx:end_idx]
+        else:
+            passwords_to_display = passwords
 
         if not passwords_to_display:
-            ctk.CTkLabel(scrollable_frame, text="No Saved Passwords.").pack(pady=20)
+            ctk.CTkLabel(frame, text="No Saved Passwords Found.").pack(pady=20)
         else:
             for i, (website, email, username, password) in enumerate(
                 passwords_to_display, start=start_idx + 1
             ):
-                password_frame = ctk.CTkFrame(scrollable_frame)
+                password_frame = ctk.CTkFrame(frame)
                 password_frame.pack(fill="x", padx=5, pady=5)
 
                 ctk.CTkLabel(
                     password_frame,
-                    text=f"{i+1}. {website}",
+                    text=f"{i}. {website}",
                     font=ctk.CTkFont(weight="bold"),
                 ).grid(row=0, column=0, sticky="w", padx=5, pady=2)
                 ctk.CTkLabel(password_frame, text=f"Email: {email}").grid(
@@ -358,13 +448,8 @@ class PasswordManagerApp(ctk.CTk):
                 )
                 password_label.grid(row=3, column=0, sticky="w", padx=5, pady=2)
 
-                show_button = ctk.CTkButton(
-                    password_frame,
-                    text="Show",
-                    width=60,
-                )
+                show_button = ctk.CTkButton(password_frame, text="Show", width=60)
                 show_button.grid(row=3, column=1, padx=5, pady=2)
-
                 show_button.configure(
                     command=partial(
                         self.toggle_password, password, password_label, show_button
@@ -402,111 +487,22 @@ class PasswordManagerApp(ctk.CTk):
                     ): self.delete_password(pw_data),
                 ).grid(row=3, column=4, padx=5, pady=2)
 
-        pagination_frame = ctk.CTkFrame(self.content_frame)
-        pagination_frame.pack(fill="x", padx=20, pady=20)
+        return total_items
 
-        prev_button = ctk.CTkButton(
-            pagination_frame, text="Previous", command=self.prev_page
-        )
-        next_button = ctk.CTkButton(
-            pagination_frame, text="Next", command=self.next_page
-        )
+    def setup_pagination(
+        self, total_items, frame, current_page, total_pages, next_command, prev_command
+    ):
 
-        if self.current_page == 0:
-            prev_button.configure(state="disabled")
-        if self.current_page >= self.total_pages - 1:
-            next_button.configure(state="disabled")
-
-        prev_button.pack(side="left", padx=(0, 10))
-        next_button.pack(side="right", padx=(10, 0))
-
-    def next_page(self):
-        if self.current_page < self.total_pages - 1:
-            self.current_page += 1
-            self.view_passwords()
-
-    def prev_page(self):
-        if self.current_page > 0:
-            self.current_page -= 1
-            self.view_passwords()
-
-    def search_passwords(self):
-        self.clear_content_frame()
-
-        ctk.CTkLabel(
-            self.content_frame,
-            text="Search Passwords",
-            font=ctk.CTkFont(size=25, weight="bold"),
-        ).pack(pady=(0, 20))
-
-        search_frame = ctk.CTkFrame(self.content_frame)
-        search_frame.pack(fill="x", padx=20, pady=20)
-
-        self.search_entry = ctk.CTkEntry(
-            search_frame, width=300, placeholder_text="Enter Website Name Or Email"
-        )
-        self.search_entry.pack(side="left", padx=(0, 10))
-
-        ctk.CTkButton(search_frame, text="Search", command=self.perform_search).pack(
-            side="left"
-        )
-
-        self.search_results_frame = ctk.CTkFrame(self.content_frame)
-        self.search_results_frame.pack(expand=True, fill="both", padx=20, pady=(0, 20))
-
-    def perform_search(self):
-        query = self.search_entry.get()
-        if not query:
-            msgbox.showwarning("Warning", "Please Enter A Search Query!")
-            return
-
-        for widget in self.search_results_frame.winfo_children():
+        for widget in frame.winfo_children():
             widget.destroy()
 
-        results = db.search_passwords(query)
-        if not results:
-            ctk.CTkLabel(
-                self.search_results_frame, text="No Matching Passwords Found."
-            ).pack(pady=20)
-        else:
-            for website, email, username, password in results:
-                result_frame = ctk.CTkFrame(self.search_results_frame)
-                result_frame.pack(fill="x", padx=5, pady=5)
+        if current_page > 0:
+            prev_button = ctk.CTkButton(frame, text="Previous", command=prev_command)
+            prev_button.pack(side="left", padx=(0, 10))
 
-                ctk.CTkLabel(
-                    result_frame,
-                    text=f"Website : {website}",
-                    font=ctk.CTkFont(weight="bold"),
-                ).pack(anchor="w", padx=5, pady=2)
-                ctk.CTkLabel(result_frame, text=f"Email : {email}").pack(
-                    anchor="w", padx=5, pady=2
-                )
-                ctk.CTkLabel(result_frame, text=f"Username : {username}").pack(
-                    anchor="w", padx=5, pady=2
-                )
-
-                password_label = ctk.CTkLabel(result_frame, text="Password : ********")
-                password_label.pack(side="left", padx=5, pady=2)
-
-                show_button = ctk.CTkButton(
-                    result_frame,
-                    text="Show",
-                    width=60,
-                )
-                show_button.pack(side="left", padx=5, pady=2)
-
-                show_button.configure(
-                    command=partial(
-                        self.toggle_password, password, password_label, show_button
-                    )
-                )
-
-                ctk.CTkButton(
-                    result_frame,
-                    text="Copy",
-                    width=60,
-                    command=lambda p=password: self.copy_to_clipboard(p),
-                ).pack(side="left", padx=5, pady=2)
+        if current_page < total_pages:
+            next_button = ctk.CTkButton(frame, text="Next", command=next_command)
+            next_button.pack(side="right", padx=(10, 0))
 
     def import_passwords(self):
         self.clear_content_frame()
@@ -632,5 +628,5 @@ class PasswordManagerApp(ctk.CTk):
 
 
 if __name__ == "__main__":
-    master_password_window = MasterPasswordWindow() 
+    master_password_window = MasterPasswordWindow()
     master_password_window.mainloop()
