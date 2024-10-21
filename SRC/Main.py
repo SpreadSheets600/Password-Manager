@@ -30,6 +30,12 @@ def is_valid_username(username):
         return True
     return username.isalnum() or "_" in username or "." in username
 
+def is_valid_website_url(url):
+    if not url:
+        return True
+    pattern = r"^https:\/\/www\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$"
+    return re.match(pattern, url) is not None
+
 
 class MasterPasswordWindow(ctk.CTk):
     def __init__(self):
@@ -128,16 +134,23 @@ class PasswordManagerApp(ctk.CTk):
         )
         self.sidebar_button_4.grid(row=4, column=0, padx=20, pady=10)
 
+        self.sidebar_button_5 = ctk.CTkButton(
+            self.sidebar_frame,
+            text="Export Passwords",
+            command=self.export_passwords,
+        )
+        self.sidebar_button_5.grid(row=5, column=0, padx=20, pady=10)
+
         self.appearance_mode_label = ctk.CTkLabel(
             self.sidebar_frame, text="Appearance Mode:", anchor="w"
         )
-        self.appearance_mode_label.grid(row=5, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_label.grid(row=6, column=0, padx=20, pady=(10, 0))
         self.appearance_mode_optionemenu = ctk.CTkOptionMenu(
             self.sidebar_frame,
             values=["Light", "Dark", "System"],
             command=self.change_appearance_mode,
         )
-        self.appearance_mode_optionemenu.grid(row=6, column=0, padx=20, pady=(10, 10))
+        self.appearance_mode_optionemenu.grid(row=7, column=0, padx=20, pady=(10, 10))
 
         self.content_frame = ctk.CTkFrame(self)
         self.content_frame.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
@@ -267,6 +280,8 @@ class PasswordManagerApp(ctk.CTk):
             msgbox.showwarning("Invalid Email", "Invalid email format. Please enter a valid email address.")
         elif not is_valid_username(data['username']):
             msgbox.showwarning("Invalid Username", "Username can only contain alphanumeric characters, dots, or underscores.")
+        elif not is_valid_website_url(data['website']):
+            msgbox.showwarning("Invalid Website URL", "Website URL should be in format https://www.[websitename].[websitedomain]")
         else:
             strng = password_strength(data['password'])
 
@@ -469,6 +484,31 @@ class PasswordManagerApp(ctk.CTk):
             import_frame, text="Select CSV File", command=self.select_csv_file
         ).pack(pady=10)
 
+    def export_passwords(self):
+        try:
+            passwords = db.get_all_passwords()
+            if not passwords:
+                msgbox.showinfo("No Data", "No passwords available to export.")
+                return
+
+            file_path = ctk.filedialog.asksaveasfilename(
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv")],
+                title="Export Passwords"
+            )
+            if not file_path:
+                return
+
+            with open(file_path, mode='w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(["Website", "Email", "Username", "Password"])
+                for website, email, username, password in passwords:
+                    writer.writerow([website, email, username, password])
+
+            msgbox.showinfo("Success", "Passwords exported successfully!")
+        except Exception as e:
+            msgbox.showerror("Error", f"Failed to export passwords: {e}")
+
 
     def select_csv_file(self):
         file_path = ctk.filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
@@ -542,6 +582,8 @@ class PasswordManagerApp(ctk.CTk):
             msgbox.showwarning("Invalid Email", "Invalid email format. Please enter a valid email address.")
         elif not is_valid_username(new_data['username']):
             msgbox.showwarning("Invalid Username", "Username can only contain alphanumeric characters, dots, or underscores.")
+        elif not is_valid_website_url(new_data['website']):
+            msgbox.showwarning("Invalid Website URL", "Website URL should be in format https://www.[websitename].[websitedomain]")
         else:
             try:
                 db.update_password(old_data, new_data)
