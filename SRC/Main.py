@@ -64,7 +64,6 @@ class MasterPasswordWindow(ctk.CTk):
 
         self.bind("<Return>", lambda event: self.check_password())
 
-
     def check_password(self):
         entered_password = self.password_entry.get()
         print(f"Entered Password : {entered_password}")
@@ -73,10 +72,7 @@ class MasterPasswordWindow(ctk.CTk):
             self.open_password_manager()
         else:
             print("Incorrect password!")
-            msgbox.showerror(
-                "Error", "Incorrect Master Password. Please Try Again."
-            )
-
+            msgbox.showerror("Error", "Incorrect Master Password. Please Try Again.")
 
     def open_password_manager(self):
 
@@ -87,6 +83,9 @@ class MasterPasswordWindow(ctk.CTk):
 
 
 class PasswordManagerApp(ctk.CTk):
+
+    ITEMS_PER_PAGE = 10
+
     def __init__(self):
         super().__init__()
         self.title("Password Manager")
@@ -148,16 +147,16 @@ class PasswordManagerApp(ctk.CTk):
 
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        self.current_page = 0
+        self.total_pages = 0
 
     def on_close(self):
         if msgbox.askokcancel("Quit", "Do You Want To Quit ?"):
             self.quit()
             sys.exit()
 
-
     def change_appearance_mode(self, mode):
         ctk.set_appearance_mode(mode)
-
 
     def add_password_form(self, pw_data=None):
         self.clear_content_frame()
@@ -217,7 +216,6 @@ class PasswordManagerApp(ctk.CTk):
             self.entrywid["username"].insert(0, pw_data[2])
             self.entrywid["password"].insert(0, pw_data[3])
 
-
     def get_strng_color(self, strng):
         if strng == "STRONG":
             return "lime"
@@ -228,64 +226,77 @@ class PasswordManagerApp(ctk.CTk):
         else:
             return "gray"
 
-
     def generate_password(self):
-            for widget in self.content_frame.winfo_children():
-                if isinstance(widget, ctk.CTkLabel) and widget.cget("text").startswith("["):
-                    widget.destroy()
+        for widget in self.content_frame.winfo_children():
+            if isinstance(widget, ctk.CTkLabel) and widget.cget("text").startswith("["):
+                widget.destroy()
 
-            data = {key: widget.get() for key, widget in self.entrywid.items()}
-            
-            if not data['username']:
-                msgbox.showwarning("Missing Information", "Please fill username for customized password!")
-                return
-            
-            lstword = data['username'].split()[-1]
-            password = generate_password()
-            password = lstword + password
+        data = {key: widget.get() for key, widget in self.entrywid.items()}
 
-            self.entrywid["password"].delete(0, ctk.END)
-            self.entrywid["password"].insert(0, password)
-
-            strng = password_strength(password)
-            color = self.get_strng_color(strng)
-
-            self.password_strng_display = ctk.CTkLabel(
-                self.content_frame,
-                text=f"[Password Strength: {strng.upper()}]",
-                text_color=color
+        if not data["username"]:
+            msgbox.showwarning(
+                "Missing Information", "Please fill username for customized password!"
             )
-            self.password_strng_display.pack(side="right")
+            return
 
+        lstword = data["username"].split()[-1]
+        password = generate_password()
+        password = lstword + password
+
+        self.entrywid["password"].delete(0, ctk.END)
+        self.entrywid["password"].insert(0, password)
+
+        strng = password_strength(password)
+        color = self.get_strng_color(strng)
+
+        self.password_strng_display = ctk.CTkLabel(
+            self.content_frame,
+            text=f"[Password Strength: {strng.upper()}]",
+            text_color=color,
+        )
+        self.password_strng_display.pack(side="right")
 
     def save_password(self):
         data = {key: widget.get() for key, widget in self.entrywid.items()}
 
         if not all(data.values()):
             msgbox.showwarning("Missing Information", "All fields must be filled!")
-        elif not is_valid_email(data['email']):
-            msgbox.showwarning("Invalid Email", "Invalid email format. Please enter a valid email address.")
-        elif not is_valid_username(data['username']):
-            msgbox.showwarning("Invalid Username", "Username can only contain alphanumeric characters, dots, or underscores.")
+        elif not is_valid_email(data["email"]):
+            msgbox.showwarning(
+                "Invalid Email",
+                "Invalid email format. Please enter a valid email address.",
+            )
+        elif not is_valid_username(data["username"]):
+            msgbox.showwarning(
+                "Invalid Username",
+                "Username can only contain alphanumeric characters, dots, or underscores.",
+            )
         else:
-            strng = password_strength(data['password'])
+            strng = password_strength(data["password"])
 
             for widget in self.content_frame.winfo_children():
-                if isinstance(widget, ctk.CTkLabel) and widget.cget("text").startswith("["):
+                if isinstance(widget, ctk.CTkLabel) and widget.cget("text").startswith(
+                    "["
+                ):
                     widget.destroy()
 
             color = self.get_strng_color(strng)
             self.password_strng_display = ctk.CTkLabel(
                 self.content_frame,
                 text=f"[Password Strength: {strng.upper()}]",
-                text_color=color
+                text_color=color,
             )
             self.password_strng_display.pack(side="right")
 
-            msgbox.showinfo("Password Strength", f"The strength of your password is: {strng}")
+            msgbox.showinfo(
+                "Password Strength", f"The strength of your password is: {strng}"
+            )
 
             if strng == "WEAK":
-                res = msgbox.askyesno("Warning", "You are saving a WEAK password. Do you want to continue?")
+                res = msgbox.askyesno(
+                    "Warning",
+                    "You are saving a WEAK password. Do you want to continue?",
+                )
                 if not res:
                     return
 
@@ -297,7 +308,6 @@ class PasswordManagerApp(ctk.CTk):
                 msgbox.showinfo("Success", "Password saved successfully!")
             except Exception as e:
                 msgbox.showerror("Error", f"Failed to save password: {e}")
-
 
     def view_passwords(self):
         self.clear_content_frame()
@@ -312,10 +322,22 @@ class PasswordManagerApp(ctk.CTk):
         scrollable_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
         passwords = db.get_all_passwords()
-        if not passwords:
+
+        total_passwords = len(passwords)
+        self.total_pages = (total_passwords // self.ITEMS_PER_PAGE) + (
+            1 if total_passwords % self.ITEMS_PER_PAGE != 0 else 0
+        )
+
+        start_idx = self.current_page * self.ITEMS_PER_PAGE
+        end_idx = start_idx + self.ITEMS_PER_PAGE
+        passwords_to_display = passwords[start_idx:end_idx]
+
+        if not passwords_to_display:
             ctk.CTkLabel(scrollable_frame, text="No Saved Passwords.").pack(pady=20)
         else:
-            for i, (website, email, username, password) in enumerate(passwords):
+            for i, (website, email, username, password) in enumerate(
+                passwords_to_display, start=start_idx + 1
+            ):
                 password_frame = ctk.CTkFrame(scrollable_frame)
                 password_frame.pack(fill="x", padx=5, pady=5)
 
@@ -343,7 +365,11 @@ class PasswordManagerApp(ctk.CTk):
                 )
                 show_button.grid(row=3, column=1, padx=5, pady=2)
 
-                show_button.configure(command=partial(self.toggle_password, password, password_label, show_button))
+                show_button.configure(
+                    command=partial(
+                        self.toggle_password, password, password_label, show_button
+                    )
+                )
 
                 ctk.CTkButton(
                     password_frame,
@@ -376,6 +402,33 @@ class PasswordManagerApp(ctk.CTk):
                     ): self.delete_password(pw_data),
                 ).grid(row=3, column=4, padx=5, pady=2)
 
+        pagination_frame = ctk.CTkFrame(self.content_frame)
+        pagination_frame.pack(fill="x", padx=20, pady=20)
+
+        prev_button = ctk.CTkButton(
+            pagination_frame, text="Previous", command=self.prev_page
+        )
+        next_button = ctk.CTkButton(
+            pagination_frame, text="Next", command=self.next_page
+        )
+
+        if self.current_page == 0:
+            prev_button.configure(state="disabled")
+        if self.current_page >= self.total_pages - 1:
+            next_button.configure(state="disabled")
+
+        prev_button.pack(side="left", padx=(0, 10))
+        next_button.pack(side="right", padx=(10, 0))
+
+    def next_page(self):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.view_passwords()
+
+    def prev_page(self):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.view_passwords()
 
     def search_passwords(self):
         self.clear_content_frame()
@@ -400,7 +453,6 @@ class PasswordManagerApp(ctk.CTk):
 
         self.search_results_frame = ctk.CTkFrame(self.content_frame)
         self.search_results_frame.pack(expand=True, fill="both", padx=20, pady=(0, 20))
-
 
     def perform_search(self):
         query = self.search_entry.get()
@@ -443,7 +495,11 @@ class PasswordManagerApp(ctk.CTk):
                 )
                 show_button.pack(side="left", padx=5, pady=2)
 
-                show_button.configure(command=partial(self.toggle_password, password, password_label, show_button))
+                show_button.configure(
+                    command=partial(
+                        self.toggle_password, password, password_label, show_button
+                    )
+                )
 
                 ctk.CTkButton(
                     result_frame,
@@ -451,7 +507,6 @@ class PasswordManagerApp(ctk.CTk):
                     width=60,
                     command=lambda p=password: self.copy_to_clipboard(p),
                 ).pack(side="left", padx=5, pady=2)
-
 
     def import_passwords(self):
         self.clear_content_frame()
@@ -469,12 +524,10 @@ class PasswordManagerApp(ctk.CTk):
             import_frame, text="Select CSV File", command=self.select_csv_file
         ).pack(pady=10)
 
-
     def select_csv_file(self):
         file_path = ctk.filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
         if file_path:
             self.import_csv(file_path)
-
 
     def import_csv(self, file_path):
         passwords = db.get_all_passwords()
@@ -519,7 +572,6 @@ class PasswordManagerApp(ctk.CTk):
         except Exception as e:
             msgbox.showerror("Error", f"Failed To Import Passwords: {e}")
 
-
     def toggle_password(self, password, label, button):
         if label.cget("text") == "Password : ********":
             label.configure(text=f"Password : {password}")
@@ -528,20 +580,24 @@ class PasswordManagerApp(ctk.CTk):
             label.configure(text="Password : ********")
             button.configure(text="Show")
 
-
     def edit_password(self, pw_data):
         self.add_password_form(pw_data)
-
 
     def update_password(self, old_data):
         new_data = {key: widget.get() for key, widget in self.entrywid.items()}
 
         if not all(new_data.values()):
             msgbox.showwarning("Missing Information", "All fields must be filled!")
-        elif not is_valid_email(new_data['email']):
-            msgbox.showwarning("Invalid Email", "Invalid email format. Please enter a valid email address.")
-        elif not is_valid_username(new_data['username']):
-            msgbox.showwarning("Invalid Username", "Username can only contain alphanumeric characters, dots, or underscores.")
+        elif not is_valid_email(new_data["email"]):
+            msgbox.showwarning(
+                "Invalid Email",
+                "Invalid email format. Please enter a valid email address.",
+            )
+        elif not is_valid_username(new_data["username"]):
+            msgbox.showwarning(
+                "Invalid Username",
+                "Username can only contain alphanumeric characters, dots, or underscores.",
+            )
         else:
             try:
                 db.update_password(old_data, new_data)
@@ -550,7 +606,6 @@ class PasswordManagerApp(ctk.CTk):
                 self.view_passwords()
             except Exception as e:
                 msgbox.showerror("Error", f"Failed To Update Password : {e}")
-
 
     def delete_password(self, pw_data):
         if msgbox.askyesno(
@@ -563,16 +618,13 @@ class PasswordManagerApp(ctk.CTk):
             except Exception as e:
                 msgbox.showerror("Error", f"Failed To Delete Password: {e}")
 
-
     def copy_to_clipboard(self, password):
         pyperclip.copy(password)
         msgbox.showinfo("Copied", "Password Copied To Clipboard!")
 
-
     def clear_entries(self):
         for entry in self.entrywid.values():
             entry.delete(0, ctk.END)
-
 
     def clear_content_frame(self):
         for widget in self.content_frame.winfo_children():
@@ -580,6 +632,5 @@ class PasswordManagerApp(ctk.CTk):
 
 
 if __name__ == "__main__":
-    master_password_window = MasterPasswordWindow()
+    master_password_window = MasterPasswordWindow() 
     master_password_window.mainloop()
-
