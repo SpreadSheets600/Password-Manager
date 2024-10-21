@@ -200,6 +200,7 @@ Special thanks to the developers of CustomTkinter and SQLite for providing the t
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://discord.gg/URZnqtEbsQ"><img src="https://avatars.githubusercontent.com/u/87961483?v=4?s=100" width="100px;" alt="Diptodeep"/><br /><sub><b>Diptodeep</b></sub></a><br /><a href="#mentoring-thelegendev" title="Mentoring">🧑‍🏫</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/OmmDevgoswami"><img src="https://avatars.githubusercontent.com/u/127383096?v=4?s=100" width="100px;" alt="Omm Devgoswami"/><br /><sub><b>Omm Devgoswami</b></sub></a><br /><a href="#plugin-OmmDevgoswami" title="Plugin/utility libraries">🔌</a></td>
     </tr>
   </tbody>
 </table>
