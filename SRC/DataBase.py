@@ -33,7 +33,7 @@ class Database:
                 cursor = self.conn.cursor()
                 cursor.execute("SELECT website, email, username, password FROM passwords")
                 results = cursor.fetchall()
-                return results if results else []  # Return empty list if no results
+                return results if results else [] 
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to retrieve data: {e}")
 
@@ -59,7 +59,7 @@ class Database:
             cursor.execute("SELECT website, email, username, password FROM passwords WHERE website LIKE ? OR email LIKE ?", 
                            (f'%{query}%', f'%{query}%'))
             results = cursor.fetchall()
-            return results if results else []  # Return empty list if no results
+            return results if results else []  
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to retrieve data: {e}")
 
@@ -71,6 +71,6 @@ class Database:
             raise DatabaseError(f"Failed to delete data: {e}")
 
     def __del__(self):
-        """Ensure the database connection is closed properly when the object is destroyed."""
+
         if self.conn:
             self.conn.close()
