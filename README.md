@@ -44,7 +44,7 @@ python Main.py
 2. Execute the following command in the terminal
 
 ```bash
-pyinstaller --onefile --noconsole --add-data "passwords.db;." --hidden-import Database --hidden-import Exceptions --hidden-import Utilities Main.py
+pyinstaller --onefile --noconsole --hidden-import Database --hidden-import Exceptions --hidden-import Utilities Main.py
 ```
 3. Once done, head back and navigate into the `dist` directory
 4. Click open the `Main` application and enjoy the product!
