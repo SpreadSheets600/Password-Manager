@@ -38,6 +38,16 @@ pip install -r requirements.txt
 ```bash
 python Main.py
 ```
+### Making an executable for the application
+
+1. Navigate to the `SRC` directory
+2. Execute the following command in the terminal
+
+```bash
+pyinstaller --onefile --noconsole --hidden-import Database --hidden-import Exceptions --hidden-import Utilities Main.py
+```
+3. Once done, head back and navigate into the `dist` directory
+4. Click open the `Main` application and enjoy the product!
 
 ## File Structure
 
