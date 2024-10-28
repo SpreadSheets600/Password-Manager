@@ -151,6 +151,12 @@ class PasswordManagerApp(ctk.CTk):
         )
         self.appearance_mode_optionemenu.grid(row=7, column=0, padx=20, pady=(10, 10))
 
+        # Define categories
+        self.categories = ["Work", "Personal", "Entertainment", "Finance", "Health"]
+
+        # Add category selection in the password entry form
+        self.category_vars = {category: ctk.BooleanVar() for category in self.categories}
+
         self.content_frame = ctk.CTkFrame(self)
         self.content_frame.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
         self.content_frame.grid_columnconfigure(0, weight=1)
@@ -209,6 +215,12 @@ class PasswordManagerApp(ctk.CTk):
 
         button_frame = ctk.CTkFrame(form_frame)
         button_frame.pack(fill="x", pady=(20, 0))
+
+        category_frame = ctk.CTkFrame(self.content_frame)
+        category_frame.pack(pady=(10, 0))
+
+        for category, var in self.category_vars.items():
+            ctk.CTkCheckBox(category_frame, text=category, variable=var).pack(side="left", padx=5)
 
         if pw_data is None:
             ctk.CTkButton(
@@ -272,10 +284,18 @@ class PasswordManagerApp(ctk.CTk):
 
     def save_password(self):
         data = {key: widget.get() for key, widget in self.entrywid.items()}
+    
+        selected_categories = [cat for cat, var in self.category_vars.items() if var.get()]
+
+        if not all(data.values()) or not selected_categories:
+            msgbox.showwarning("Missing Information", "All fields must be filled, and at least one category must be selected.")
+            return
+
+        data['category'] = ', '.join(selected_categories)
+        
 
         if not all(data.values()):
             msgbox.showwarning("Missing Information", "All fields must be filled!")
-
         elif not is_valid_email(data['email']):
             msgbox.showwarning("Invalid Email", "Invalid email format. Please enter a valid email address.")
         elif not is_valid_username(data['username']):
@@ -283,6 +303,12 @@ class PasswordManagerApp(ctk.CTk):
         elif not is_valid_website_url(data['website']):
             msgbox.showwarning("Invalid Website URL", "Website URL should be in format https://www.[websitename].[websitedomain]")
         else:
+            existing_passwords = db.get_all_passwords()
+            for entry in existing_passwords:
+                if entry[1] == data['email']:
+                    msgbox.showwarning("Duplicate Entry", "This email already exists for this website. Please edit existing email or add another email.")
+                    return
+                
             strng = password_strength(data["password"])
 
             for widget in self.content_frame.winfo_children():
@@ -382,6 +408,15 @@ class PasswordManagerApp(ctk.CTk):
             side="left"
         )
 
+        self.categories = ['Work', 'Personal', 'Entertainment', 'Finance', 'Other']
+        self.category_vars = {category: ctk.BooleanVar() for category in self.categories}
+        self.category_frame = ctk.CTkFrame(self.content_frame)
+        self.category_frame.pack(pady=(10, 20))
+
+        for category, var in self.category_vars.items():
+            ctk.CTkCheckBox(self.category_frame, text=category, variable=var).pack(side="left")
+
+
         self.search_results_frame = ctk.CTkScrollableFrame(self.content_frame)
         self.search_results_frame.pack(expand=True, fill="both", padx=20, pady=(0, 20))
 
@@ -390,11 +425,17 @@ class PasswordManagerApp(ctk.CTk):
 
     def perform_search(self):
         query = self.search_entry.get()
-        if not query:
-            msgbox.showwarning("Warning", "Please Enter A Search Query!")
+        selected_categories = [category for category, var in self.category_vars.items() if var.get()]
+
+        if not query and not selected_categories:
+            msgbox.showwarning("Warning", "Please enter a search query or select at least one category!")
             return
 
-        self.search_results = db.search_passwords(query)
+        if query:
+            self.search_results = db.search_passwords(query, selected_categories)
+        else:
+            self.search_results = db.search_passwords_by_categories(selected_categories)
+
         self.current_page = 0
 
         if not self.search_results:
@@ -642,6 +683,15 @@ class PasswordManagerApp(ctk.CTk):
     def update_password(self, old_data):
         new_data = {key: widget.get() for key, widget in self.entrywid.items()}
 
+        # Get selected categories from checkboxes
+        selected_categories = [cat for cat, var in self.category_vars.items() if var.get()]
+        
+        if not all(new_data.values()) or not selected_categories:
+            msgbox.showwarning("Missing Information", "All fields must be filled, and at least one category must be selected.")
+            return
+
+        new_data['category'] = ', '.join(selected_categories)
+
         if not all(new_data.values()):
             msgbox.showwarning("Missing Information", "All fields must be filled!")
 
@@ -653,6 +703,11 @@ class PasswordManagerApp(ctk.CTk):
             msgbox.showwarning("Invalid Website URL", "Website URL should be in format https://www.[websitename].[websitedomain]")
 
         else:
+            existing_passwords = db.get_all_passwords()
+            for entry in existing_passwords:
+                if entry[0] == new_data['website'] and entry[1] == new_data['email'] and entry != old_data:
+                    msgbox.showwarning("Duplicate Entry", "This email already exists for this website. Please edit the existing entry or use a different email.")
+                    return
             try:
                 db.update_password(old_data, new_data)
                 self.clear_entries()
