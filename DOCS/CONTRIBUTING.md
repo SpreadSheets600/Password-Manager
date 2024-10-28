@@ -1,6 +1,6 @@
-# Contributing to Budget Tracker
+# Contributing to Password Manager
 
-Thank you for your interest in contributing to Budget Tracker! 🎉
+Thank you for your interest in contributing to Password Manager! 🎉
 
 We welcome all kinds of contributions, including bug fixes, feature requests, documentation improvements, and more. Please follow the guidelines below to help keep the project running smoothly.
 
